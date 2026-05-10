@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Syndicate Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #C9A84C;
+  --gold-dim: #8a6f32;
+  --gold-glow: rgba(201,168,76,0.15);
+  --bg: #0a0a0a;
+  --bg2: #111111;
+  --bg3: #181818;
+  --bg4: #202020;
+  --border: rgba(201,168,76,0.15);
+  --border-bright: rgba(201,168,76,0.4);
+  --text: #e8e0d0;
+  --text-dim: #7a7468;
+  --text-muted: #4a4640;
+  --red: #c0392b;
+  --green: #1e8c5a;
+  --blue: #2563a8;
+  --purple: #6b46a8;
+  --cat-morning: #C9A84C;
+  --cat-prayer: #1e8c5a;
+  --cat-work: #2563a8;
+  --cat-growth: #9b59b6;
+  --cat-personal: #c0392b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Subtle grid texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 24px 60px; }
+
+/* ── HEADER ── */
+.header {
+  padding: 48px 0 32px;
+  border-bottom: 0.5px solid var(--border);
+  margin-bottom: 32px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.header-left h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.header-left p {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+.header-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.header-date .date-big {
+  font-size: 22px;
+  color: var(--text);
+  font-weight: 300;
+  display: block;
+  margin-top: 4px;
+}
+
+/* ── DAY SELECTOR ── */
+.day-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.day-btn {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  border: 0.5px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.day-btn:hover {
+  border-color: var(--border-bright);
+  color: var(--text);
+}
+
+.day-btn.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #000;
+  font-weight: 500;
+}
+
+.day-btn .day-dot {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.day-btn.active .day-dot { background: #000; }
+
+.day-btn .day-pct {
+  display: block;
+  font-size: 10px;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+/* ── MAIN GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── HABITS PANEL ── */
+.habits-panel {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 20px 24px 16px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: var(--gold);
+}
+
+.panel-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.cat-section { border-bottom: 0.5px solid var(--border); }
+.cat-section:last-child { border-bottom: none; }
+
+.cat-header {
+  padding: 14px 24px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cat-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  flex: 1;
+}
+
+.cat-score {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.habit-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 24px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-top: 0.5px solid rgba(255,255,255,0.03);
+}
+
+.habit-item:hover { background: rgba(201,168,76,0.04); }
+
+.habit-item.checked { background: rgba(201,168,76,0.03); }
+
+.custom-cb {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--text-muted);
+  border-radius: 2px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.habit-item.checked .custom-cb {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+
+.custom-cb svg {
+  width: 11px;
+  height: 11px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.habit-item.checked .custom-cb svg { opacity: 1; }
+
+.habit-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  transition: color 0.15s;
+  line-height: 1.4;
+}
+
+.habit-item.checked .habit-text {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--text-muted);
+}
+
+.habit-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── RIGHT SIDEBAR ── */
+.sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+/* ── RING CARD ── */
+.ring-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 4px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ring-card .card-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  align-self: flex-start;
+}
+
+.main-ring { position: relative; display: inline-block; margin-bottom: 16px; }
+
+.main-ring svg { display: block; }
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-pct {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.ring-done {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* Rank badge */
+.rank-pill {
+  display: inline-block;
+  padding: 6px 18px;
+  border-radius: 2px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* ── CATEGORY RINGS ── */
+.cat-rings-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 4px;
+  padding: 20px 24px;
+}
+
+.card-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+.cat-rings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.cat-ring-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.cat-ring-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.cat-ring-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ── WEEKLY BARS ── */
+.weekly-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 4px;
+  padding: 20px 24px;
+}
+
+.week-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.week-row:last-child { margin-bottom: 0; }
+
+.week-day {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.week-day.today { color: var(--gold); font-weight: 500; }
+
+.bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg4);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 1px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  min-width: 0;
+}
+
+.week-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── THE CODE ── */
+.code-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+
+.code-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 32px;
+  margin-top: 16px;
+}
+
+.code-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.04);
+}
+
+.code-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  color: var(--gold-dim);
+  flex-shrink: 0;
+  width: 20px;
+  line-height: 1.4;
+}
+
+.code-text {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* ── FOOTER ── */
+.footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.gold-line {
+  width: 40px;
+  height: 1px;
+  background: var(--gold-dim);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.app { animation: fadeIn 0.4s ease; }
+
+.circle-progress {
+  transition: stroke-dashoffset 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>The Syndicate Protocol</h1>
+      <p>Discipline &bull; Consistency &bull; Domination</p>
+    </div>
+    <div class="header-date">
+      <span style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase">Today</span>
+      <span class="date-big" id="headerDate"></span>
+    </div>
+  </div>
+
+  <!-- DAY SELECTOR -->
+  <div class="day-selector" id="daySelector"></div>
+
+  <!-- MAIN GRID -->
+  <div class="grid">
+
+    <!-- HABITS -->
+    <div class="habits-panel">
+      <div class="panel-header">
+        <span class="panel-title" id="activeDayName">Monday</span>
+        <span class="panel-sub" id="habitCount">0 / 0 completed</span>
+      </div>
+      <div id="habitsList"></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- MAIN RING -->
+      <div class="ring-card">
+        <div class="card-label">Daily Progress</div>
+        <div class="main-ring">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="66" fill="none" stroke="#1e1e1e" stroke-width="10"/>
+            <circle id="mainRingFg" cx="80" cy="80" r="66" fill="none"
+              stroke="#C9A84C" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="414.69" stroke-dashoffset="414.69"
+              transform="rotate(-90 80 80)" class="circle-progress"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-pct" id="mainPct">0%</div>
+            <div class="ring-done" id="mainDone">0 / 20</div>
+          </div>
+        </div>
+        <div class="rank-pill" id="rankBadge">—</div>
+      </div>
+
+      <!-- CATEGORY RINGS -->
+      <div class="cat-rings-card">
+        <div class="card-label">Category Breakdown</div>
+        <div class="cat-rings-grid" id="catRings"></div>
+      </div>
+
+      <!-- WEEKLY BARS -->
+      <div class="weekly-card">
+        <div class="card-label">Week at a Glance</div>
+        <div id="weeklyBars"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- THE CODE -->
+  <div class="code-card">
+    <div class="card-label">The Code — Non-Negotiables</div>
+    <div class="code-grid">
+      <div class="code-item"><span class="code-num">I</span><span class="code-text">Fajr is never missed. It is the first victory of the day.</span></div>
+      <div class="code-item"><span class="code-num">II</span><span class="code-text">The body is maintained. Workout 6× a week. No excuses.</span></div>
+      <div class="code-item"><span class="code-num">III</span><span class="code-text">Deep work comes before entertainment. Always.</span></div>
+      <div class="code-item"><span class="code-num">IV</span><span class="code-text">Family is protected. Time, presence, and respect — always.</span></div>
+      <div class="code-item"><span class="code-num">V</span><span class="code-text">Social media is a tool, not a master. 20 min cap, daily.</span></div>
+      <div class="code-item"><span class="code-num">VI</span><span class="code-text">The mind is fed daily. Books, learning, reflection.</span></div>
+      <div class="code-item"><span class="code-num">VII</span><span class="code-text">Sleep is sacred. 10:30 PM lights out. 5:00 AM rise.</span></div>
+      <div class="code-item"><span class="code-num">VIII</span><span class="code-text">Financial discipline is non-negotiable. Track everything.</span></div>
+      <div class="code-item"><span class="code-num">IX</span><span class="code-text">Silence before reaction. Control the response always.</span></div>
+      <div class="code-item"><span class="code-num">X</span><span class="code-text">The Sunday review never gets skipped. Ever.</span></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="gold-line"></div>
+    <div class="footer-text">The Syndicate doesn't hustle &mdash; it systems. It executes. It dominates.</div>
+    <div class="gold-line"></div>
+  </div>
+
+</div>
+
+<script>
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_NAMES = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+const HABITS = [
+  {id:'wakeup',   label:'Wake up at 5:00 AM',           cat:'Morning',  time:'5:00 AM'},
+  {id:'fajr',     label:'Fajr prayer',                   cat:'Prayer',   time:'5:15 AM'},
+  {id:'water',    label:'Drink 500ml water',              cat:'Morning',  time:'5:20 AM'},
+  {id:'workout',  label:'Workout — 45 to 60 min',        cat:'Morning',  time:'5:30 AM'},
+  {id:'shower',   label:'Cold shower',                    cat:'Morning',  time:'6:30 AM'},
+  {id:'journal',  label:'Morning journal — 10 min',       cat:'Morning',  time:'6:45 AM'},
+  {id:'dw1',      label:'Deep work block 1 — 90 min',     cat:'Work',     time:'9:00 AM'},
+  {id:'dw2',      label:'Deep work block 2 — 90 min',     cat:'Work',     time:'11:00 AM'},
+  {id:'zuhr',     label:'Zuhr prayer',                    cat:'Prayer',   time:'1:00 PM'},
+  {id:'lunch',    label:'Clean meal — no junk',           cat:'Personal', time:'1:15 PM'},
+  {id:'nap',      label:'20 min power nap',               cat:'Personal', time:'1:45 PM'},
+  {id:'asr',      label:'Asr prayer',                     cat:'Prayer',   time:'4:00 PM'},
+  {id:'dw3',      label:'Deep work block 3 — review',     cat:'Work',     time:'3:00 PM'},
+  {id:'read',     label:'Read 20+ pages',                 cat:'Growth',   time:'4:30 PM'},
+  {id:'social',   label:'Social media 20 min max',        cat:'Personal', time:'All day'},
+  {id:'maghrib',  label:'Maghrib prayer',                 cat:'Prayer',   time:'7:00 PM'},
+  {id:'family',   label:'Quality family time — 1 hr',     cat:'Personal', time:'7:00 PM'},
+  {id:'isha',     label:'Isha prayer',                    cat:'Prayer',   time:'8:30 PM'},
+  {id:'meditate', label:'Meditation — 10 to 15 min',      cat:'Growth',   time:'8:00 PM'},
+  {id:'review',   label:'Daily review and plan tomorrow', cat:'Growth',   time:'9:30 PM'},
+  {id:'h2o',      label:'Water intake 2L or more',        cat:'Personal', time:'All day'},
+  {id:'sleep',    label:'In bed by 10:30 PM',             cat:'Morning',  time:'10:30 PM'},
+];
+
+const CATS = ['Morning','Prayer','Work','Growth','Personal'];
+const CAT_COLORS = {
+  Morning: '#C9A84C',
+  Prayer:  '#1e8c5a',
+  Work:    '#2563a8',
+  Growth:  '#9b59b6',
+  Personal:'#c0392b'
+};
+
+// State
+let state = {};
+try { state = JSON.parse(localStorage.getItem('syndicate_v3') || '{}'); } catch(e) {}
+
+const todayJs = new Date().getDay();
+let activeDay = todayJs === 0 ? 6 : todayJs - 1;
+
+function save() {
+  try { localStorage.setItem('syndicate_v3', JSON.stringify(state)); } catch(e) {}
+}
+
+function key(d, id) { return `d${d}_${id}`; }
+
+function getScore(d) {
+  const total = HABITS.length;
+  const done = HABITS.filter(h => state[key(d, h.id)]).length;
+  return { done, total, pct: total ? Math.round(done / total * 100) : 0 };
+}
+
+function getCatScore(d, cat) {
+  const habits = HABITS.filter(h => h.cat === cat);
+  const done = habits.filter(h => state[key(d, h.id)]).length;
+  const total = habits.length;
+  return { done, total, pct: total ? Math.round(done / total * 100) : 0 };
+}
+
+function getRank(pct) {
+  if (pct >= 90) return { label: 'Don Status', color: '#C9A84C', bg: 'rgba(201,168,76,0.12)', border: 'rgba(201,168,76,0.3)' };
+  if (pct >= 75) return { label: 'Made Man',   color: '#2563a8', bg: 'rgba(37,99,168,0.12)', border: 'rgba(37,99,168,0.3)' };
+  if (pct >= 60) return { label: 'Associate',  color: '#1e8c5a', bg: 'rgba(30,140,90,0.12)', border: 'rgba(30,140,90,0.3)' };
+  return { label: 'Back to Work', color: '#c0392b', bg: 'rgba(192,57,43,0.12)', border: 'rgba(192,57,43,0.3)' };
+}
+
+// Render day tabs
+function renderDayTabs() {
+  const el = document.getElementById('daySelector');
+  el.innerHTML = DAYS.map((d, i) => {
+    const { pct } = getScore(i);
+    const isToday = i === (todayJs === 0 ? 6 : todayJs - 1);
+    return `<button class="day-btn ${i === activeDay ? 'active' : ''}" onclick="setDay(${i})">
+      ${d}
+      ${isToday ? '<span class="day-dot"></span>' : ''}
+      <span class="day-pct">${pct > 0 ? pct + '%' : '—'}</span>
+    </button>`;
+  }).join('');
+}
+
+// Render habits
+function renderHabits() {
+  const el = document.getElementById('habitsList');
+  document.getElementById('activeDayName').textContent = DAY_NAMES[activeDay];
+  const { done, total } = getScore(activeDay);
+  document.getElementById('habitCount').textContent = `${done} / ${total} completed`;
+
+  let html = '';
+  CATS.forEach(cat => {
+    const catHabits = HABITS.filter(h => h.cat === cat);
+    const { done: cd, total: ct } = getCatScore(activeDay, cat);
+    html += `<div class="cat-section">
+      <div class="cat-header">
+        <div class="cat-dot" style="background:${CAT_COLORS[cat]}"></div>
+        <div class="cat-name">${cat}</div>
+        <div class="cat-score">${cd}/${ct}</div>
+      </div>`;
+    catHabits.forEach(h => {
+      const checked = !!state[key(activeDay, h.id)];
+      html += `<div class="habit-item ${checked ? 'checked' : ''}" onclick="toggle('${h.id}')">
+        <div class="custom-cb">
+          <svg viewBox="0 0 12 12" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="2,6 5,9 10,3"/>
+          </svg>
+        </div>
+        <div class="habit-text">${h.label}</div>
+        <div class="habit-time">${h.time}</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// Render main ring
+function renderMainRing() {
+  const { done, total, pct } = getScore(activeDay);
+  const circ = 414.69;
+  const offset = circ - (pct / 100) * circ;
+  document.getElementById('mainRingFg').style.strokeDashoffset = offset;
+  document.getElementById('mainPct').textContent = pct + '%';
+  document.getElementById('mainDone').textContent = done + ' / ' + total;
+
+  const rank = getRank(pct);
+  const badge = document.getElementById('rankBadge');
+  badge.textContent = rank.label;
+  badge.style.color = rank.color;
+  badge.style.background = rank.bg;
+  badge.style.border = '0.5px solid ' + rank.border;
+}
+
+// Render category rings
+function renderCatRings() {
+  const el = document.getElementById('catRings');
+  el.innerHTML = CATS.map(cat => {
+    const { done, total, pct } = getCatScore(activeDay, cat);
+    const r = 28;
+    const circ = 2 * Math.PI * r;
+    const offset = circ - (pct / 100) * circ;
+    const col = CAT_COLORS[cat];
+    return `<div class="cat-ring-item">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="#1e1e1e" stroke-width="7"/>
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="${col}" stroke-width="7"
+          stroke-linecap="round"
+          stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
+          transform="rotate(-90 36 36)" class="circle-progress"/>
+        <text x="36" y="40" text-anchor="middle" font-size="14" font-weight="500"
+          fill="${pct > 0 ? col : '#4a4640'}" font-family="DM Mono, monospace">${pct}%</text>
+      </svg>
+      <div class="cat-ring-label" style="color:${col}">${cat}</div>
+      <div class="cat-ring-count">${done}/${total}</div>
+    </div>`;
+  }).join('');
+}
+
+// Render weekly bars
+function renderWeeklyBars() {
+  const todayIdx = todayJs === 0 ? 6 : todayJs - 1;
+  const el = document.getElementById('weeklyBars');
+  el.innerHTML = DAYS.map((d, i) => {
+    const { pct } = getScore(i);
+    const isToday = i === todayIdx;
+    return `<div class="week-row">
+      <div class="week-day ${isToday ? 'today' : ''}">${d}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <div class="week-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderDayTabs();
+  renderHabits();
+  renderMainRing();
+  renderCatRings();
+  renderWeeklyBars();
+}
+
+function setDay(idx) {
+  activeDay = idx;
+  renderAll();
+}
+
+function toggle(habitId) {
+  const k = key(activeDay, habitId);
+  state[k] = !state[k];
+  save();
+  renderHabits();
+  renderMainRing();
+  renderCatRings();
+  renderWeeklyBars();
+  renderDayTabs();
+}
+
+// Header date
+const now = new Date();
+document.getElementById('headerDate').textContent = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+
+renderAll();
+</script>
+</body>
+</html>
